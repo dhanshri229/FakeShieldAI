@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}SMS / WhatsApp Scanner — FakeShield AI{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-8 shadow-xl">
+        <div class="flex items-center space-x-3 mb-6">
+            <div class="w-12 h-12 rounded-lg bg-emerald-950 text-emerald-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-comment-dots"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-white">SMS & WhatsApp Scam Detector</h1>
+                <p class="text-gray-400 text-sm">Classifies scams into Banking, OTP, Job, Lottery, Investment, KYC, Delivery & UPI Fraud</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('scan_message_route') }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Message Content</label>
+                <textarea name="message" rows="6" placeholder="e.g. Your SBI account will be blocked. Click this link immediately http://sbi-kyc.info to update KYC..." required
+                    class="w-full px-4 py-3 bg-cyber-dark border border-cyber-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Detect Message Fraud</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

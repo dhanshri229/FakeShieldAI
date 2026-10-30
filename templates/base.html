@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FakeShield AI — Digital Threat Protection Platform{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#0b0f19',
+                            card: '#111827',
+                            border: '#1f2937',
+                            cyan: '#06b6d4',
+                            blue: '#3b82f6',
+                            green: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+        .glow-red {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-cyber-dark text-gray-100">
+
+    <!-- Header Navigation -->
+    <nav class="bg-cyber-card border-b border-cyber-border sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-2 text-xl font-extrabold text-cyan-400">
+                        <i class="fa-solid fa-shield-halved text-2xl text-cyan-400"></i>
+                        <span>FakeShield <span class="text-blue-500">AI</span></span>
+                    </a>
+                </div>
+
+                <!-- Nav Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{{ url_for('dashboard') }}" class="hover:text-cyan-400 transition"><i class="fa-solid fa-chart-line mr-1"></i> Dashboard</a>
+                    
+                    <!-- Instant Click Scanners Button -->
+                    <button onclick="toggleScannerModal()" type="button" class="px-3.5 py-1.5 bg-cyber-border hover:bg-cyan-950 border border-cyan-800 text-cyan-400 font-bold rounded-lg text-sm transition flex items-center space-x-2">
+                        <i class="fa-solid fa-cubes text-cyan-400"></i>
+                        <span>Scanners</span>
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+
+                    <a href="{{ url_for('genai_page') }}" class="hover:text-cyan-400 transition"><i class="fa-solid fa-robot text-cyan-400 mr-1"></i> AI Assistant</a>
+                    <a href="{{ url_for('history') }}" class="hover:text-cyan-400 transition"><i class="fa-solid fa-clock-rotate-left mr-1"></i> History</a>
+
+                    {% if current_user and current_user['role'] == 'admin' %}
+                    <a href="{{ url_for('admin_panel') }}" class="text-amber-400 font-semibold hover:text-amber-300 transition"><i class="fa-solid fa-user-gear mr-1"></i> Admin Panel</a>
+                    {% endif %}
+                </div>
+
+                <!-- User Auth -->
+                <div class="flex items-center space-x-4">
+                    {% if current_user %}
+                    <a href="{{ url_for('profile') }}" class="text-sm font-medium text-gray-300 hover:text-white flex items-center">
+                        <i class="fa-solid fa-circle-user text-cyan-400 text-lg mr-1.5"></i>
+                        {{ current_user['username'] }}
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="px-3 py-1.5 text-xs bg-red-600/80 hover:bg-red-600 text-white font-semibold rounded-md transition">Logout</a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="px-4 py-1.5 text-sm bg-cyber-border hover:bg-gray-700 text-cyan-400 font-semibold rounded-md transition">Login</a>
+                    <a href="{{ url_for('register') }}" class="px-4 py-1.5 text-sm bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-md glow-cyan transition">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Instant Scanner Modal Popup -->
+    <div id="scannerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cyber-card border border-cyber-border w-full max-w-4xl rounded-2xl p-6 md:p-8 shadow-2xl relative space-y-6 animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-cyan-950 text-cyan-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-white">Select Scanner Vector</h2>
+                        <p class="text-xs text-gray-400">Choose a threat detection scanner to launch instantly</p>
+                    </div>
+                </div>
+                <button onclick="toggleScannerModal()" class="w-9 h-9 rounded-full bg-cyber-dark hover:bg-red-950 text-gray-400 hover:text-red-400 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 6 Scanner Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- URL Scanner -->
+                <a href="{{ url_for('scan_url_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-cyan-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-cyan-950 text-cyan-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-cyan-400 transition">URL Scanner</h3>
+                        <p class="text-xs text-gray-400 mt-1">Phishing links, IP hosts, domain age & VirusTotal</p>
+                    </div>
+                </a>
+
+                <!-- Email Scanner -->
+                <a href="{{ url_for('scan_email_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-blue-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-blue-950 text-blue-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-blue-400 transition">Email Scanner</h3>
+                        <p class="text-xs text-gray-400 mt-1">NLP model for email subject, body & links</p>
+                    </div>
+                </a>
+
+                <!-- SMS / WhatsApp Scanner -->
+                <a href="{{ url_for('scan_message_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-emerald-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-950 text-emerald-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-comment-dots"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-emerald-400 transition">SMS & WhatsApp</h3>
+                        <p class="text-xs text-gray-400 mt-1">Banking, OTP, Job & UPI scam classification</p>
+                    </div>
+                </a>
+
+                <!-- QR Code Scanner -->
+                <a href="{{ url_for('scan_qr_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-purple-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-purple-950 text-purple-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-purple-400 transition">QR Code Inspector</h3>
+                        <p class="text-xs text-gray-400 mt-1">OpenCV QR matrix image decoding</p>
+                    </div>
+                </a>
+
+                <!-- Image OCR Scanner -->
+                <a href="{{ url_for('scan_image_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-pink-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-pink-950 text-pink-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-pink-400 transition">Image OCR Scanner</h3>
+                        <p class="text-xs text-gray-400 mt-1">Screenshots & payment receipt fraud</p>
+                    </div>
+                </a>
+
+                <!-- Document Scanner -->
+                <a href="{{ url_for('scan_document_route') }}" class="bg-cyber-dark border border-cyber-border hover:border-amber-500 p-5 rounded-xl transition group flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-amber-950 text-amber-400 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base group-hover:text-amber-400 transition">Document Scanner</h3>
+                        <p class="text-xs text-gray-400 mt-1">PDF, DOCX & TXT file payload analysis</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-3 rounded-lg border text-sm font-medium flex items-center justify-between
+                        {% if category == 'danger' %} bg-red-950/60 border-red-700 text-red-300
+                        {% elif category == 'warning' %} bg-amber-950/60 border-amber-700 text-amber-300
+                        {% elif category == 'success' %} bg-emerald-950/60 border-emerald-700 text-emerald-300
+                        {% else %} bg-blue-950/60 border-blue-700 text-blue-300 {% endif %}">
+                        <div>
+                            <i class="fa-solid fa-circle-info mr-2"></i> {{ message }}
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-cyber-card border-t border-cyber-border py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>© 2026 FakeShield AI — Unified Scam, Phishing & Digital Threat Detection Platform. Powered by Scikit-Learn ML & XAI.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        function toggleScannerModal() {
+            const modal = document.getElementById('scannerModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Close modal on Escape key or backdrop click
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('scannerModal');
+                if (!modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

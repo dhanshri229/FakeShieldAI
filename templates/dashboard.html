@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — FakeShield AI Threat Analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white flex items-center space-x-3">
+                <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+                <span>Threat Analytics Dashboard</span>
+            </h1>
+            <p class="text-gray-400 text-sm mt-1">Real-time scan statistics, threat metrics, and category distributions.</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('export_excel') }}" class="px-4 py-2 bg-cyber-card border border-cyber-border hover:border-emerald-500 text-emerald-400 font-semibold rounded-lg text-sm transition flex items-center space-x-2">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Export Excel Log</span>
+            </a>
+            <a href="{{ url_for('scan_url_route') }}" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-sm glow-cyan transition flex items-center space-x-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>New Scan</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-400 text-sm font-medium">Total Scans Performed</span>
+                <i class="fa-solid fa-shield-virus text-cyan-400 text-xl"></i>
+            </div>
+            <div class="text-3xl font-black text-white mt-2">{{ stats.total_scans }}</div>
+            <span class="text-xs text-gray-500 mt-1 block">Across all 6 scanner vectors</span>
+        </div>
+
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-400 text-sm font-medium">Safe Targets</span>
+                <i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+            </div>
+            <div class="text-3xl font-black text-emerald-400 mt-2">{{ stats.safe_scans }}</div>
+            <span class="text-xs text-emerald-500/80 mt-1 block">Verified legitimate content</span>
+        </div>
+
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-400 text-sm font-medium">Threats Flagged</span>
+                <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            </div>
+            <div class="text-3xl font-black text-red-400 mt-2">{{ stats.threat_scans }}</div>
+            <span class="text-xs text-red-500/80 mt-1 block">Phishing & scam targets</span>
+        </div>
+
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-400 text-sm font-medium">Average Risk Index</span>
+                <i class="fa-solid fa-gauge-high text-amber-400 text-xl"></i>
+            </div>
+            <div class="text-3xl font-black text-amber-400 mt-2">{{ stats.avg_risk }}<span class="text-lg text-gray-400">/100</span></div>
+            <span class="text-xs text-gray-500 mt-1 block">Global platform risk score</span>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Safe vs Threat Chart -->
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+                <span>Safe vs Threat Ratio</span>
+            </h3>
+            <div class="h-64 flex justify-center items-center">
+                <canvas id="ratioChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Scam Categories Chart -->
+        <div class="bg-cyber-card border border-cyber-border p-6 rounded-xl">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                <i class="fa-solid fa-chart-bar text-cyan-400"></i>
+                <span>Threat Categories Distribution</span>
+            </h3>
+            <div class="h-64">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Scans Table -->
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
+                <span>Recent Threat Detections</span>
+            </h3>
+            <a href="{{ url_for('history') }}" class="text-xs text-cyan-400 hover:underline">View All History →</a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-300">
+                <thead class="bg-cyber-dark text-gray-400 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3">Scan Type</th>
+                        <th class="px-4 py-3">Target Input</th>
+                        <th class="px-4 py-3">Risk Level</th>
+                        <th class="px-4 py-3">Score</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-cyber-border">
+                    {% for scan in recent_scans %}
+                    <tr class="hover:bg-cyber-border/40 transition">
+                        <td class="px-4 py-3 font-semibold text-cyan-400">{{ scan.scan_type }}</td>
+                        <td class="px-4 py-3 max-w-xs truncate text-gray-200">{{ scan.input_data }}</td>
+                        <td class="px-4 py-3">
+                            {% if scan.risk_level == 'HIGH' %}
+                            <span class="px-2 py-1 bg-red-950 text-red-400 border border-red-800 text-xs font-bold rounded">🔴 HIGH</span>
+                            {% elif scan.risk_level == 'MEDIUM' %}
+                            <span class="px-2 py-1 bg-amber-950 text-amber-400 border border-amber-800 text-xs font-bold rounded">🟠 MEDIUM</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold rounded">🟢 SAFE</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 font-bold text-white">{{ scan.risk_score }}/100</td>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ scan.threat_category }}</td>
+                        <td class="px-4 py-3">
+                            <a href="{{ url_for('result', scan_id=scan.id) }}" class="text-cyan-400 hover:text-cyan-300 font-semibold text-xs"><i class="fa-solid fa-eye"></i> View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-6 text-center text-gray-500">No scans recorded yet. Use any scanner above to start scanning.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Ratio Chart
+        const ratioCtx = document.getElementById('ratioChart').getContext('2d');
+        new Chart(ratioCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Safe Targets', 'Threats Flagged'],
+                datasets: [{
+                    data: [{{ stats.safe_scans }}, {{ stats.threat_scans }}],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderColor: '#111827',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#9ca3af' } } }
+            }
+        });
+
+        // Category Chart
+        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoriesData = {{ stats.categories | tojson }};
+        const catLabels = categoriesData.map(c => c.threat_category);
+        const catCounts = categoriesData.map(c => c.count);
+
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: catLabels.length ? catLabels : ['Banking Scam', 'Phishing URL', 'OTP Scam', 'Job Scam'],
+                datasets: [{
+                    label: 'Detections',
+                    data: catCounts.length ? catCounts : [0, 0, 0, 0],
+                    backgroundColor: '#06b6d4'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+                    y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    });
+</script>
+{% endblock %}

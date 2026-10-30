@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile — FakeShield AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-8 shadow-xl flex items-center space-x-6">
+        <div class="w-20 h-20 rounded-full bg-cyan-950 border-2 border-cyan-500 text-cyan-400 flex items-center justify-center text-3xl font-bold">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-white">{{ user.username }}</h1>
+            <p class="text-gray-400 text-sm"><i class="fa-solid fa-envelope mr-1 text-cyan-400"></i> {{ user.email }}</p>
+            <div class="mt-2 flex space-x-2">
+                <span class="px-2.5 py-0.5 bg-cyan-950 border border-cyan-800 text-cyan-400 text-xs font-bold rounded-full uppercase">{{ user.role }}</span>
+                <span class="px-2.5 py-0.5 bg-gray-800 text-gray-400 text-xs font-bold rounded-full">Joined: {{ user.created_at }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Scan History -->
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-6">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <i class="fa-solid fa-history text-cyan-400"></i>
+            <span>Your Personal Scan Activity</span>
+        </h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-300">
+                <thead class="bg-cyber-dark text-gray-400 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3">Scan Type</th>
+                        <th class="px-4 py-3">Target Input</th>
+                        <th class="px-4 py-3">Risk Level</th>
+                        <th class="px-4 py-3">Score</th>
+                        <th class="px-4 py-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-cyber-border">
+                    {% for scan in user_scans %}
+                    <tr class="hover:bg-cyber-border/40 transition">
+                        <td class="px-4 py-3 font-semibold text-cyan-400 text-xs">{{ scan.scan_type }}</td>
+                        <td class="px-4 py-3 max-w-xs truncate text-gray-200 text-xs">{{ scan.input_data }}</td>
+                        <td class="px-4 py-3">
+                            {% if scan.risk_level == 'HIGH' %}
+                            <span class="px-2 py-0.5 bg-red-950 text-red-400 border border-red-800 text-[10px] font-bold rounded">HIGH</span>
+                            {% elif scan.risk_level == 'MEDIUM' %}
+                            <span class="px-2 py-0.5 bg-amber-950 text-amber-400 border border-amber-800 text-[10px] font-bold rounded">MEDIUM</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold rounded">SAFE</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 font-bold text-white text-xs">{{ scan.risk_score }}/100</td>
+                        <td class="px-4 py-3">
+                            <a href="{{ url_for('result', scan_id=scan.id) }}" class="text-cyan-400 hover:text-cyan-300 font-semibold text-xs"><i class="fa-solid fa-eye"></i> View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-6 text-center text-gray-500">No personal scans logged yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

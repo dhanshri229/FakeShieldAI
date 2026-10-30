@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Panel — FakeShield AI{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white flex items-center space-x-3">
+                <i class="fa-solid fa-user-gear text-amber-400"></i>
+                <span>Admin Administration Panel</span>
+            </h1>
+            <p class="text-gray-400 text-sm mt-1">Manage platform users, inspect scan logs, and retrain machine learning models.</p>
+        </div>
+        <form action="{{ url_for('admin_retrain_models') }}" method="POST">
+            <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-sm transition flex items-center space-x-2">
+                <i class="fa-solid fa-rotate text-white animate-spin-hover"></i>
+                <span>Trigger ML Model Retraining</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-6">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <i class="fa-solid fa-users text-cyan-400"></i>
+            <span>Registered Users Management</span>
+        </h2>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-300">
+                <thead class="bg-cyber-dark text-gray-400 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3">User ID</th>
+                        <th class="px-4 py-3">Username</th>
+                        <th class="px-4 py-3">Email Address</th>
+                        <th class="px-4 py-3">Role</th>
+                        <th class="px-4 py-3">Created Date</th>
+                        <th class="px-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-cyber-border">
+                    {% for user in users %}
+                    <tr class="hover:bg-cyber-border/40 transition">
+                        <td class="px-4 py-3 font-mono text-xs text-gray-500">#{{ user.id }}</td>
+                        <td class="px-4 py-3 font-bold text-white">{{ user.username }}</td>
+                        <td class="px-4 py-3 text-gray-400 text-xs">{{ user.email }}</td>
+                        <td class="px-4 py-3">
+                            {% if user.role == 'admin' %}
+                            <span class="px-2 py-0.5 bg-amber-950 text-amber-400 border border-amber-800 text-[10px] font-bold rounded">ADMIN</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-blue-950 text-blue-400 border border-blue-800 text-[10px] font-bold rounded">USER</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-gray-500 text-xs">{{ user.created_at }}</td>
+                        <td class="px-4 py-3">
+                            {% if user.role != 'admin' %}
+                            <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Delete this user account?')">
+                                <button type="submit" class="text-red-400 hover:text-red-300 font-bold text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </form>
+                            {% else %}
+                            <span class="text-xs text-gray-600">Protected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
